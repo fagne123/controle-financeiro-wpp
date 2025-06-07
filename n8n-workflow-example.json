@@ -1,0 +1,209 @@
+{
+  "nodes": [
+    {
+      "id": "n8n-node-whatsapp",
+      "name": "WhatsApp Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": {
+        "path": "whatsapp-webhook",
+        "responseMode": "onReceived",
+        "responseData": "noData",
+        "options": {}
+      },
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "id": "n8n-node-ai-processing",
+      "name": "AI Text Analysis",
+      "type": "n8n-nodes-base.openAi",
+      "parameters": {
+        "authentication": "apiKey",
+        "operation": "completion",
+        "model": "gpt-4",
+        "text": "=Extraia as informau00e7u00f5es financeiras da seguinte mensagem do WhatsApp e estruture em formato JSON:\n\nCategoria: (comida, moradia, transporte, lazer, trabalho, financeiro)\nSubcategoria: (depende da categoria)\nValor: (valor em reais)\nDescriu00e7u00e3o: (descrição da despesa)\n\nMensagem: {{$json.body.text}}",
+        "options": {
+          "maxTokens": 500
+        }
+      },
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "id": "n8n-node-parse-json",
+      "name": "JSON Parser",
+      "type": "n8n-nodes-base.function",
+      "parameters": {
+        "functionCode": "// Tentativa de extrair o JSON da resposta da IA\nconst text = $input.item.json.text || $input.item.json.response;\n\ntry {\n  // Encontrar estrutura JSON dentro do texto\n  const jsonMatch = text.match(/\{[\s\S]*\}/);\n  \n  if (jsonMatch) {\n    const jsonText = jsonMatch[0];\n    const parsedData = JSON.parse(jsonText);\n    \n    // Validau00e7u00e3o bu00e1sica\n    if (!parsedData.categoria) throw new Error('Categoria nu00e3o encontrada');\n    if (!parsedData.subcategoria) throw new Error('Subcategoria nu00e3o encontrada');\n    if (!parsedData.valor) throw new Error('Valor nu00e3o encontrado');\n    \n    // Padronizar formato para a API\n    return {\n      json: {\n        value: parseFloat(String(parsedData.valor).replace(',', '.')),\n        date: new Date().toISOString(),\n        category: parsedData.categoria.toLowerCase(),\n        subcategory: parsedData.subcategoria.toLowerCase(),\n        description: parsedData.descriu00e7u00e3o || ''\n      }\n    };\n  } else {\n    throw new Error('Nu00e3o foi possu00edvel extrair JSON da resposta');\n  }\n} catch (error) {\n  return {\n    json: {\n      error: true,\n      message: 'Erro ao processar dados: ' + error.message,\n      originalText: text\n    }\n  };\n}"
+      },
+      "typeVersion": 1,
+      "position": [750, 300]
+    },
+    {
+      "id": "n8n-node-if",
+      "name": "Se dados vu00e1lidos",
+      "type": "n8n-nodes-base.if",
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.error}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "typeVersion": 1,
+      "position": [1000, 300]
+    },
+    {
+      "id": "n8n-node-http-request",
+      "name": "Enviar para API Financeira",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "http://seu-servidor.com/api/transactions",
+        "method": "POST",
+        "authentication": "headerAuth",
+        "headerAuthKey": "X-API-Token",
+        "headerAuthValue": "SEU_API_TOKEN_AQUI",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "value",
+              "value": "={{$json.value}}"
+            },
+            {
+              "name": "date",
+              "value": "={{$json.date}}"
+            },
+            {
+              "name": "category",
+              "value": "={{$json.category}}"
+            },
+            {
+              "name": "subcategory",
+              "value": "={{$json.subcategory}}"
+            },
+            {
+              "name": "description",
+              "value": "={{$json.description}}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 1,
+      "position": [1250, 200]
+    },
+    {
+      "id": "n8n-node-error-log",
+      "name": "Registrar Erro",
+      "type": "n8n-nodes-base.noOp",
+      "parameters": {},
+      "typeVersion": 1,
+      "position": [1250, 400]
+    },
+    {
+      "id": "n8n-node-whatsapp-response",
+      "name": "Responder no WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "https://api.whatsapp.com/send-message",
+        "method": "POST",
+        "authentication": "headerAuth",
+        "headerAuthKey": "Authorization",
+        "headerAuthValue": "SEU_TOKEN_WHATSAPP_API",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{$node[\"WhatsApp Trigger\"].json.body.from}}"
+            },
+            {
+              "name": "message",
+              "value": "={% if $json.success %}\n✅ Despesa registrada com sucesso!\n- Categoria: {{$json.category}}\n- Subcategoria: {{$json.subcategory}}\n- Valor: R$ {{$json.value.toFixed(2)}}\n{% else %}\n❌ Nu00e3o foi possu00edvel registrar a despesa. Por favor, tente novamente com mais detalhes.\n{% endif %}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 1,
+      "position": [1500, 300]
+    }
+  ],
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Text Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Text Analysis": {
+      "main": [
+        [
+          {
+            "node": "JSON Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JSON Parser": {
+      "main": [
+        [
+          {
+            "node": "Se dados vu00e1lidos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Se dados vu00e1lidos": {
+      "main": [
+        [
+          {
+            "node": "Enviar para API Financeira",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar Erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar para API Financeira": {
+      "main": [
+        [
+          {
+            "node": "Responder no WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar Erro": {
+      "main": [
+        [
+          {
+            "node": "Responder no WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

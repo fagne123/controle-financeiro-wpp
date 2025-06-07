@@ -1,0 +1,159 @@
+body {
+  background-color: #f8f9fa;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar-brand {
+  font-weight: bold;
+}
+
+.card {
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card-header {
+  font-weight: 600;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.table th {
+  font-weight: 600;
+  color: #495057;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.badge {
+  font-size: 0.85em;
+  padding: 0.4em 0.6em;
+}
+
+/* Category colors */
+.badge-comida {
+  background-color: #28a745;
+  color: white;
+}
+
+.badge-moradia {
+  background-color: #007bff;
+  color: white;
+}
+
+.badge-transporte {
+  background-color: #fd7e14;
+  color: white;
+}
+
+.badge-lazer {
+  background-color: #6f42c1;
+  color: white;
+}
+
+.badge-trabalho {
+  background-color: #20c997;
+  color: white;
+}
+
+.badge-financeiro {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Dashboard cards */
+.card-title {
+  font-size: 1rem;
+  color: #6c757d;
+}
+
+.card-text {
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+/* Form styles */
+.form-label {
+  font-weight: 500;
+}
+
+/* Chart containers */
+.chart-container {
+  position: relative;
+  height: 300px;
+}
+
+/* Action buttons */
+.btn-action {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  margin-right: 5px;
+}
+
+/* Loading indicators */
+.loading-data {
+  position: relative;
+  min-height: 200px;
+}
+
+.loading-data::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.7);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-data::before {
+  content: 'Carregando...';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1001;
+  background-color: #fff;
+  padding: 15px 30px;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-weight: bold;
+  color: #007bff;
+}
+
+/* Toast notifications */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+}
+
+/* Pagination */
+.pagination {
+  margin-bottom: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+  .btn-group {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .btn-group .btn {
+    flex: 1 0 40%;
+    margin: 2px;
+  }
+}
